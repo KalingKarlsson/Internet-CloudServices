@@ -8,4 +8,11 @@
         <h1>Home</h1>
         <p>This is Home. <a href="/about.html">Go to about</a></p>
     </body>
+    <form action="/upload/:itemID" method="put" encrypt="multipart/form-data">
+        Item ID<br>
+        <input type="text" name="id" autocomplete="off"/><br>
+        File <br>
+        <input type="file" name="file" /><br>
+        <input text="Submit" type="submit" value="Submit">
+      </form>
 </html>
