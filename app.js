@@ -1,38 +1,67 @@
-const http = require('http')
-const fs = require('fs')
 const express = require('express')
-const { response } = require('express')
 const app = express()
 
-app.get('/hello',function(request, response){
-    response.send("Hello")
+const AWS = require('aws-sdk')
+const jwt = require("jsonwebtoken")
+const bodyparser = require("body-parser")
+
+const db = require("./database")
+
+const multer = require("multer")
+const fileStorage = multer.memoryStorage()
+const upload = multer({storage: fileStorage})
+
+app.use(bodyparser.urlencoded({extended: false}))
+app.use(bodyparser.json())
+
+const credentials = new AWS.Credentials({
+    accessKeyID: 'AKIAJD7EZCOE2DQJTNWQ',
+    secretAccessKey:'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'
+})
+const s3 = new AWS.S3({
+    credentials: credentials,
+    region: 'eu-west-1b'
 })
 
+const jwtSecret = "cloudServicesIsFun"
 
-/*
-const server = http.createServer(function(req, res){
+app.post("/login", function(request, response){
+    const grant_type = request.body.grant_type
+    const username = request.body.username
+    const password = request.body.password
 
-    if(req.method == "GET"){
-        "/home.html"
-        const filename = req.url.substr(1)
-        fs.readFile("pages/"+filename, "utf8", function(err, content){
-            if(err){
-                res.statusCode = 404
-                res.setHeader("Conntent-type", "text/plain")
-                res.end("<h1>not error</h1><p>...</p>")
-            }else{
-                res.statusCode = 200
-                res.setHeader("Conntent-type", "text/plain")
-                res.end(content)
+    if(grant_type != "password"){
+        response.status(400).json({error: "unsupported_grant_type"})
+        return
+    }
+
+    db.getUserWithUsername(username, function(error, users){
+        if(error){
+            response.status(500).end()
+        }else{
+
+            if(users.length == 0){
+                response.status(404).json({error: "No user found"})
+				return
             }
-        })
-    }
-    else{
-        res.statusCode = 404
-        res.setHeader("Conntent-type", "text/plain")
-        res.end("<h1>BAD</h1><p>Hej</p>")
-    }
-})*/
+
+            const user = users[0]
+            if(password == user.Password){
+                //Login successfull.
+                const userToken = jwt.sign({
+                    userID: user.UserID
+                }, jwtSecret)
+
+                response.status(200).json("JWT: "+ userToken)
+            }
+            else{
+                response.status(400).json({error: "invalid_grant"})
+            }
+
+        }
+    })
+
+})
 
 var port = process.env.PORT || 8080
 server.listen(port)
