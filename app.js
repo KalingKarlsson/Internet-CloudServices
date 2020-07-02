@@ -20,7 +20,7 @@ const credentials = new AWS.Credentials({
 })
 const s3 = new AWS.S3({
     credentials: credentials,
-    region: 'eu-west-1b'
+    region: 'eu-west-1'
 })
 
 const jwtSecret = "cloudServicesIsFun"
@@ -61,4 +61,41 @@ app.post("/login", function(request, response){
         }
     })
 
+    app.post("/images", function(request, response){
+    
+        const userID = request.body.userID
+        const userLoggedIn = isUserVerified(request, userID)
+        if(userLoggedIn){
+    
+            const image = {
+                ownerID:request.body.userID,
+                imgName:request.body.imgName,
+                caption:request.body.caption
+            }
+    
+            db.createImage(image, function(error, img){
+                if(error){
+                    response.status(400).json('To create an image you require: "userID":"YOUR ID HERE", "imgName":"NEW IMAGE NAME HERE", "Caption":"YOUR CAPTION HERE')
+                }else{
+                    db.getImageWithId(img.insertId, function(error, image){
+                        if (error){
+                            response.status(201).json("Img Created")
+                        }else{
+                            response.status(201).json(image)
+                        }
+                    })
+                    
+                }
+            })
+    
+        }else{
+            response.status(401).end()
+        }
+    })
+
+})
+
+const PORT = process.env.PORT || 8080
+app.listen(PORT, () =>{
+    console.log(`Listening on port ${PORT}`)
 })
