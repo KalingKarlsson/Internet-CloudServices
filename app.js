@@ -26,7 +26,9 @@ const s3 = new AWS.S3({
 
 const jwtSecret = "cloudServicesIsFun"
 
+
 app.post("/login", function(request, response){
+
     const grant_type = request.body.grant_type
     const username = request.body.username
     const password = request.body.password
@@ -109,6 +111,10 @@ app.get('/users', function (request, response) {
     response.status(200).json(users)
 })
 
+app.get('/delete', function (request, response) {
+    response.status(200).json(users)
+})
+
 app.get('/users/:id', function (request, response) {
     const id = parseInt(request.params.userID)
     const user = users.find(users => users.userID == id)
@@ -137,8 +143,8 @@ var port = process.env.PORT || 8080
 server.listen(port)
 */
 
-app.get('/', function (request, response) {
-    response.sendfile("home.html")
+app.get('/', function (req, res) {
+    res.sendFile(__dirname  + "/home.html")
 })
 
 app.get('upload/:itemID', function (request, response) {

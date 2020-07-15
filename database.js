@@ -1,4 +1,7 @@
 const mysql = require("mysql");
+const express = require('express')
+const app = express()
+
 
 const databaseConnection = mysql.createConnection({
   host: "antluds-database.cmympwzm8wlp.eu-west-1.rds.amazonaws.com",
@@ -60,7 +63,30 @@ function createLikerTable() {
     }
   });
 }
- 
+const users = [{
+  id: 1,
+  name: "Ludwig"
+},
+{
+  id: 2,
+  name: "Anton"
+}, 
+{
+  id: 3,
+  name: "PLG"
+}]
+
+app.post('/submit',function(req,res)
+{
+  
+  const users = users.find(users => users.userID == id)
+  var mysql = "INSERT INTO accounts ? '"+req.body.username+ VALUES;
+
+connection.query(mysql, [values], function (err, result) {
+if (err) throw err;
+console.log("Number of records inserted: " + result.affectedRows);
+});
+})
 
 createUserTable();
 createImageTable();
