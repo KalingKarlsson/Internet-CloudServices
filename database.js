@@ -1,21 +1,13 @@
 const mysql = require("mysql")
 
-const databaseConnection = mysql.createConnection({
+const connection = mysql.createConnection({
 	host: "antluds-database.cmympwzm8wlp.eu-west-1.rds.amazonaws.com",
 	user: "adminal",
 	password: "antlud123",
 	database: "antludsDatabase1"
-});
-// Tables
-databaseConnection.connect(function(err){
-    if (err) {
-         throw err;
-    }
-    else{
-        console.log('connected to DB was successful')
-    }
 })
 
+// Tables
 function createUserTable(){
 	const tableQuery = `CREATE TABLE IF NOT EXISTS Users (
 		UserID INT AUTO_INCREMENT PRIMARY KEY, 
@@ -23,7 +15,7 @@ function createUserTable(){
 		Password VARCHAR(25) NOT NULL
 		)`;
 
-		databaseConnection.query(tableQuery, function(error, result){
+		connection.query(tableQuery, function(error, result){
 			if(error){
 				throw error;
             }
@@ -39,7 +31,7 @@ function createImageTable(){
 		FOREIGN KEY (OwnerID) REFERENCES Users(UserID) ON DELETE CASCADE	
 	)`;
 
-	databaseConnection.query(imagesTableQuery, function(error, result){
+	connection.query(imagesTableQuery, function(error, result){
 		if (error){
 			throw error;
 		}
@@ -54,7 +46,7 @@ function createLikerTable(){
         FOREIGN KEY (LikerID) REFERENCES Users(UserID) ON DELETE CASCADE
 	)`;
 
-	databaseConnection.query(likerTableQuery, function(error, result){
+	connection.query(likerTableQuery, function(error, result){
 		if(error){
 			throw error;
 		}
@@ -65,32 +57,32 @@ function createLikerTable(){
 exports.createUser = function(newUser, callback ){
 	const query = "INSERT INTO Users (Username, Password) VALUES (?,?)"
 	const values = [newUser.username, newUser.password]
-	databaseConnection.query(query, values, function(error, user){
+	connection.query(query, values, function(error, user){
 		callback(error, user)
 	})
 }
 exports.getUserWithID = function(id, callback){
 	const query = "SELECT * FROM Users WHERE UserID = ?"
-	databaseConnection.query(query, id, function(error, user){
+	connection.query(query, id, function(error, user){
 		callback(error, user)
 	})
 }
 exports.getUserWithUsername = function(username, callback){
 	const query = "SELECT * FROM Users WHERE Username = ?"
-	databaseConnection.query(query, username, function(error, user){
+	connection.query(query, username, function(error, user){
 		callback(error, user)
 	})
 }
 exports.changeUserPassword = function(user, callback){
 	const query = "UPDATE Users SET Password = ? WHERE UserID = ?"
 	const values = [user.password, user.userID]
-	databaseConnection.query(query, values, function(error, user){
+	connection.query(query, values, function(error, user){
 		callback(error, user)
 	})
 }
-exports.deleteUser = function(ID, callback){
+exports.deleteUser = function(id, callback){
 	const query = "DELETE FROM Users WHERE UserID = ?"
-	databaseConnection.query(query, ID, function(error, deletion){
+	connection.query(query, id, function(error, deletion){
 		callback(error, deletion)
 	})
 }
@@ -99,60 +91,54 @@ exports.deleteUser = function(ID, callback){
 exports.createImage = function(newImage, callback){
 	const query = "INSERT INTO Images (OwnerID, ImgName, Caption) VALUES (?,?,?)"
 	const values = [ newImage.ownerID, newImage.imgName, newImage.Caption]
-	databaseConnection.query(query, values, function(error, image){
+	connection.query(query, values, function(error, image){
 		callback(error, image)
 	})
 }
 exports.getImageWithId = function(id, callback){
 	const query = "SELECT * FROM Images WHERE ImgID = ?"
-	databaseConnection.query(query,id, function(error, image){
+	connection.query(query,id, function(error, image){
 		callback(error, image)
 	})
 }
 exports.changeImage = function(image, callback){
 	const query = "UPDATE Images SET  imgName = ?, Caption = ? WHERE ImgID = ?"
 	const values = [ image.imgName, image.Caption, image.imgID]
-	databaseConnection.query(query, values, function(error, alteredImg){
+	connection.query(query, values, function(error, alteredImg){
 		callback(error, alteredImg)
 	})
 }
 exports.deleteImage = function(ID, callback){
 	const query = "DELETE FROM Images WHERE ImgID = ?"
-	databaseConnection.query(query, ID, function(error, deletion){
+	connection.query(query, ID, function(error, deletion){
 		callback(error, deletion)
 	})
 }
 exports.getOwnerIdFromImage = function(id, callback){
 	const query = "SELECT * FROM Images WHERE ImgID = ?"
-	databaseConnection.query(query, id, function(error, image){
+	connection.query(query, id, function(error, image){
 		callback(error, image[0].OwnerID)
 	})
 }
-/*//Get all valuables owned by a user
-exports.getUsersItems = function(id, callback){
-	const query = "SELECT * FROM Valuables WHERE OwnerID = ?"
-	databaseConnection.query(query,id,function(error, vals){
-		callback(error, vals)
-	})
-}*/
+
 
 //Admin api
 exports.changeDB = function(query, callback){
-	databaseConnection.query(query, function(error, resp){
+	connection.query(query, function(error, resp){
 		callback(error, resp)
 	})
 }
 
 //Return all users in database
 exports.getAllUsers = function(callback){
-	databaseConnection.query("SELECT * FROM Users", function(error, users){
+	connection.query("SELECT * FROM Users", function(error, users){
 		callback(error,users)
 	})
 }
 
 //Return all Images in database
 exports.getAllImages = function(callback){
-	databaseConnection.query("SELECT * FROM Images", function(error, images){
+	connection.query("SELECT * FROM Images", function(error, images){
 		callback(error,images)
 	})
 }
@@ -190,6 +176,30 @@ exports.connectFileToValuable = function(fileName, itemID, callback){
 	})
 }
 
+*/
+
+/*
+var sql = "INSERT INTO Users (UserID, Username, Password) VALUES ?";
+var values = [
+  ['1','John', 'Highway71'],
+  ['2','Peter', 'Lowstreet4'],
+  ['3','Amy', 'Applest652'],
+  ['4','Hannah', 'Mountain21'],
+  ['5','Michael', 'Valley345'],
+  ['6','Sandy', 'Oceanblvd2'],
+  ['7','Betty', 'GreenGrass1'],
+  ['8','Richard', 'Skyst331'],
+  ['9','Susan', 'Oneway98'],
+  ['10','Vicky', 'YellowGarden2'],
+  ['11','Ben', 'ParkLane38'],
+  ['12','William', 'Centralst954'],
+  ['13','Chuck', 'MainRoad989'],
+  ['14','Viola', 'Sideway1633']
+];
+connection.query(sql, [values], function (err, result) {
+  if (err) throw err;
+  console.log("Number of records inserted: " + result.affectedRows);
+});
 */
 
 
