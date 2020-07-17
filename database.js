@@ -90,7 +90,7 @@ exports.deleteUser = function(id, callback){
 //Images
 exports.createImage = function(newImage, callback){
 	const query = "INSERT INTO Images (OwnerID, ImgName, Caption) VALUES (?,?,?)"
-	const values = [ newImage.ownerID, newImage.imgName, newImage.Caption]
+	const values = [ newImage.ownerID, newImage.imgName, newImage.caption]
 	connection.query(query, values, function(error, image){
 		callback(error, image)
 	})
@@ -103,7 +103,7 @@ exports.getImageWithId = function(id, callback){
 }
 exports.changeImage = function(image, callback){
 	const query = "UPDATE Images SET  imgName = ?, Caption = ? WHERE ImgID = ?"
-	const values = [ image.imgName, image.Caption, image.imgID]
+	const values = [ image.imgName, image.caption, image.imgID]
 	connection.query(query, values, function(error, alteredImg){
 		callback(error, alteredImg)
 	})
@@ -114,6 +114,12 @@ exports.deleteImage = function(ID, callback){
 		callback(error, deletion)
 	})
 }
+exports.getUsersImages = function(id, callback){
+	const query = "SELECT * FROM Images WHERE OwnerID = ?"
+	connection.query(query,id,function(error, data){
+		callback(error, data)
+	})
+}
 exports.getOwnerIdFromImage = function(id, callback){
 	const query = "SELECT * FROM Images WHERE ImgID = ?"
 	connection.query(query, id, function(error, image){
@@ -121,6 +127,13 @@ exports.getOwnerIdFromImage = function(id, callback){
 	})
 }
 
+exports.connectFileToImage = function(fileName, imgID, callback){
+	const query = "UPDATE Images SET Photo = ? WHERE ImgID = ?"
+	const values = [fileName,imgID]
+	connection.query(query, values, function(error, resp){
+		callback(error, resp)
+	})
+}
 
 //Admin api
 exports.changeDB = function(query, callback){
@@ -168,13 +181,6 @@ exports.updateItemCount = function(userID, callback){
 	})
 }
 
-exports.connectFileToValuable = function(fileName, itemID, callback){
-	const query = "UPDATE Valuables SET Photo = ? WHERE ItemID = ?"
-	const values = [fileName,itemID]
-	databaseConnection.query(query, values, function(error, resp){
-		callback(error, resp)
-	})
-}
 
 */
 
