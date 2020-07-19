@@ -15,8 +15,8 @@ app.use(bodyparser.urlencoded({ extended: false }))
 app.use(bodyparser.json())
 
 const credentials = new AWS.Credentials({
-    accessKeyID: 'AKIATPRKIKSEXDA7WH43',
-    secretAccessKey: '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'
+    accessKeyId: 'AKIAJS5RMGX6X77VHE5Q',
+    secretAccessKey: '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'
 })
 
 const s3 = new AWS.S3({
@@ -290,6 +290,7 @@ app.delete("/images/:id", function(request,response){
 })
 
 //Upload file
+
 app.post("/upload", upload.single("file"), function(request, response){
     const userID = request.body.userID
     const imgID = request.body.imgID
@@ -305,15 +306,12 @@ app.post("/upload", upload.single("file"), function(request, response){
                     response.status(400).json(error)
                 }else{
 
-                    var reportData = new Buffer.from(originalFileName);
-
                     var uploadParameters = {
                         Bucket: 'antlud-bucket-1',//specified amazon bucket
                         Key: originalFileName,//name to save file as
-                        Body: reportData//file data to upload
+                        Body: request.file.buffer//file data to upload
                     };
                     s3.upload(uploadParameters, function(err) {
-                        console.log(uploadParameters)
                         if (err){
                             response.status(400).json(err)          
                         }
@@ -327,6 +325,7 @@ app.post("/upload", upload.single("file"), function(request, response){
         response.status(401).json({error: 'Unauthorized Access'})
     }
 })
+
 
 //Verify token
 //is kind of working i guess
