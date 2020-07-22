@@ -27,10 +27,10 @@ function createImageTable(){
 		ImgID INT AUTO_INCREMENT PRIMARY KEY,
 		OwnerID INT NOT NULL,
 		ImgName VARCHAR(25) NOT NULL,
+		Photo VARCHAR(50) NOT NULL,
 		Caption TEXT,
-		FOREIGN KEY (OwnerID) REFERENCES Users(UserID) ON DELETE CASCADE	
+		FOREIGN KEY (OwnerID) REFERENCES Users(UserID) ON DELETE CASCADE
 	)`;
-
 	connection.query(imagesTableQuery, function(error, result){
 		if (error){
 			throw error;
@@ -42,8 +42,8 @@ function createLikerTable(){
 	const likerTableQuery = `CREATE TABLE IF NOT EXISTS Liker (
 		LikerID INT NOT NULL,
 		ImgID INT NOT NULL,
-        FOREIGN KEY (ImgID) REFERENCES Images(ImgID) ON DELETE CASCADE,
-        FOREIGN KEY (LikerID) REFERENCES Users(UserID) ON DELETE CASCADE
+		FOREIGN KEY (ImgID) REFERENCES Images(ImgID) ON DELETE CASCADE,
+		FOREIGN KEY (LikerID) REFERENCES Users(UserID) ON DELETE CASCADE
 	)`;
 
 	connection.query(likerTableQuery, function(error, result){
@@ -135,6 +135,54 @@ exports.connectFileToImage = function(fileName, imgID, callback){
 	})
 }
 
+//Likes
+exports.addLike = function(newLike, callback ){
+	const query = "INSERT INTO Liker (ImgID, LikerID) VALUES (( SELECT ImgID FROM Images WHERE ImgID = ? ),?)"
+	const values = [newLike.imgID, newLike.likerID]
+	connection.query(query, values, function(error, like){
+		callback(error, like)
+	})
+}
+
+exports.getLike = function(id, callback ){
+	const query = "SELECT * FROM Liker WHERE LikerID = ?"
+	connection.query(query, id, function(error, like){
+		callback(error, like)
+	})
+}
+
+exports.deleteLike = function(ID, callback){
+	const query = "DELETE FROM Liker WHERE LikerID = ?"
+	connection.query(query, ID, function(error, deletion){
+		callback(error, deletion)
+	})
+}
+
+exports.getOwnerIdFromLike = function(LikeID, callback){
+	const query = "SELECT * FROM Liker WHERE LikerID = ?"
+	connection.query(query, LikeID, function(error, like){
+		console.log(like[0].LikerID)
+		callback(error, like[0].LikeID)
+	})
+}
+
+exports.connectLikerToImages = function(likeID, imgID, callback){
+	const firstQuery = "UPDATE Images SET LikerID = ? WHERE LikerID = ?"
+	connection.query(firstQuery, likeID,function(error, deletion){
+		if(!error){
+			const query = "UPDATE Images SET LikerID = ? WHERE ImgID = ?"
+			const values = [likeID, imgID]
+			connection.query(query, values,function(error, change){
+			callback(error, change)
+			})
+		}
+		else{
+			callback(error, deletion)	
+		}
+	})
+	
+}
+
 //Admin api
 exports.changeDB = function(query, callback){
 	connection.query(query, function(error, resp){
@@ -156,33 +204,6 @@ exports.getAllImages = function(callback){
 	})
 }
 
-/*
-exports.connectWarrantyToValuable = function(warID, valID, callback){
-	const firstQuery = "UPDATE Valuables SET WarrantyID = null WHERE WarrantyID = ?"
-	databaseConnection.query(firstQuery, warID,function(error, deletion){
-		if(!error){
-			const query = "UPDATE Valuables SET WarrantyID = ? WHERE ItemID = ?"
-			const values = [warID, valID]
-			databaseConnection.query(query, values,function(error, change){
-			callback(error, change)
-			})
-		}
-		else{
-			callback(error, deletion)	
-		}
-	})
-	
-}
-exports.updateItemCount = function(userID, callback){
-	const query = "UPDATE Users SET ItemCount = (SELECT COUNT(OwnerID) FROM Valuables WHERE OwnerID = ?) WHERE UserID = ?"
-	const ID = [userID, userID]
-	databaseConnection.query(query, values, function(error, update){
-		callback(error, update)
-	})
-}
-
-
-*/
 
 /*
 var sql = "INSERT INTO Users (UserID, Username, Password) VALUES ?";

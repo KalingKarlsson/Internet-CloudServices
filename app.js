@@ -289,6 +289,67 @@ app.delete("/images/:id", function(request,response){
 
 })
 
+//------------------------- Likes
+//add a like
+//adds even though it already exists
+app.post("/likes", function(request,response){
+    const newLike = { 
+        imgID:request.body.imgID,
+        likerID: request.body.userID,
+    }
+    
+    const userLoggedIn = isUserVerified(request, newLike.likerID)
+    if(userLoggedIn){
+        dbConnection.addLike(newLike, function(error, like){
+            if(error){
+                response.status(400).json("Variables needed: imgID, userID")
+            }else{
+                console.log("Like added")
+                dbConnection.connectLikerToImages(like.insertId, newLike.imgID, function(error, change){
+                    if(error){
+                        console.log("Like not connected to an image")
+                        dbConnection.deleteLike(like.insertId, function(error, deleteResp){
+                            if(error) response.status(500).json("New like added, not connected.")
+                        })
+                        response.status(400).json("like not added")
+                    }else{
+                        console.log("Like connected to image")
+                        dbConnection.getLike(like.insertId, function(error, liker){
+                            if(error){
+                                response.status(201).json("Like created and connected.")
+                            }else{
+                                response.status(201).json(liker)
+                            }
+                        })
+                        
+                    }
+                })
+            }
+        })
+    }else{
+        response.status(401).end()
+    }
+})
+
+//Get a liker
+app.get("/likes/:likerID", function(request,response){
+    const likerID = request.params.likerID
+    dbConnection.getLike(likerID, function(error, like){
+        if(error){
+            response.status(400).json(error)
+        }else{
+            console.log(like[0])
+            const userLoggedIn = isUserVerified(request, likerID)
+            if(userLoggedIn){
+                response.status(200).json(like)
+            }else{
+                response.status(401).end()
+            }
+        }
+    })
+})
+
+
 //Upload file
 
 app.post("/upload", upload.single("file"), function(request, response){
