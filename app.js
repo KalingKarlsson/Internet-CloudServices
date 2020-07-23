@@ -65,10 +65,10 @@ app.post("/login", function (request, response) {
         }
     })
 })
+
 //Create new user
 //skapar man samma igen så returnerar den 400 men vid näsa nya person så har den då skippat ett id nummer
 //body = {" mer mera ,password": "1337lol"}
-
 app.post("/Users", function (request, response) {
     const newUser = {
         username: request.body.username,
@@ -90,7 +90,6 @@ app.post("/Users", function (request, response) {
 })
 
 //get a user
-//visar blankt om det inte finns någon på det id och säger code 304 not modified
 app.get('/Users/:id', function (req, res) {
     const userID = req.params.id
     const userLoggedIn = isUserVerified(req, userID)
@@ -125,8 +124,6 @@ app.delete('/Users/:id', function (req, res) {
 })
 
 //Change a users password
-//Authorization
-//body = {"password": "1337lol"}
 app.put("/Users/:id", function (request, response) {
     const alterUserPw = {
         userID: request.params.id,
@@ -154,71 +151,70 @@ app.put("/Users/:id", function (request, response) {
 })
 
 //Images functions
-//login first and with bearer token and application json
-//Body : {	"userID": 17,	"imgName": "Cool",	"caption": "Strolling through tha Garden!"}
-app.post("/images", function(request, response){
-    
+// Create image object
+app.post("/images", function (request, response) {
+
     const userID = request.body.userID
     const userLoggedIn = isUserVerified(request, userID)
-    if(userLoggedIn){
+    if (userLoggedIn) {
 
         const images = {
-            ownerID:request.body.userID,
-            imgName:request.body.imgName,
-            caption:request.body.caption
+            ownerID: request.body.userID,
+            imgName: request.body.imgName,
+            caption: request.body.caption
         }
 
-        dbConnection.createImage(images, function(error, img){
-            if(error){
+        dbConnection.createImage(images, function (error, img) {
+            if (error) {
                 response.status(400).json('To create image data requires: "userID":"YOUR ID HERE", "imgName":"NEW IMG NAME HERE", "caption":"YOUR CAPTION HERE')
-            }else{
-                dbConnection.getImageWithId(img.insertId, function(error, image){
-                    if (error){
+            } else {
+                dbConnection.getImageWithId(img.insertId, function (error, image) {
+                    if (error) {
                         response.status(201).json("Img Created")
-                    }else{
+                    } else {
                         response.status(201).json(image)
                     }
                 })
-                
+
             }
         })
 
-    }else{
+    } else {
         response.status(401).end()
     }
 })
 //Get an image with specific ID
-app.get("/images/:id", function(request, response){
+app.get("/images/:id", function (request, response) {
     const id = request.params.id
     let userID = null
-    dbConnection.getOwnerIdFromImage(id, function(error, ownerID){
-        if (error){
+    dbConnection.getOwnerIdFromImage(id, function (error, ownerID) {
+        if (error) {
             response.status(400).end()
-        }else{
+        } else {
             userID = ownerID
-            
+
             const userLoggedIn = isUserVerified(request, userID)
-            if(userLoggedIn){
-                dbConnection.getImageWithId(id, function(error, image){
-                    if(error){
+            if (userLoggedIn) {
+                dbConnection.getImageWithId(id, function (error, image) {
+                    if (error) {
                         response.status(400).end()
-                    }else{
+                    } else {
                         response.status(200).json(image)
                     }
                 })
-            }else{
-            response.status(401).end()
+            } else {
+                response.status(401).end()
             }
 
         }
     })
 })
 
-//Change an image data
-app.put("/images/:id", function(request, response){
+//Change image data
+app.put("/images/:id", function (request, response) {
     const userID = request.body.userID
     const userLoggedIn = isUserVerified(request, userID)
-    if(userLoggedIn){
+    if (userLoggedIn) {
 
         const alteredImage = {
             ownerID: userID,
@@ -227,61 +223,61 @@ app.put("/images/:id", function(request, response){
             caption: request.body.caption,
         }
 
-        dbConnection.changeImage(alteredImage, function(error, changedImg){
-            if(error){
+        dbConnection.changeImage(alteredImage, function (error, changedImg) {
+            if (error) {
                 response.status(400).json(error)
-            }else{
-                dbConnection.getImageWithId(alteredImage.imgID, function(error, image){
-                    if(error){
+            } else {
+                dbConnection.getImageWithId(alteredImage.imgID, function (error, image) {
+                    if (error) {
                         response.status(200).json("Image data changed")
-                    }else{
+                    } else {
                         response.status(200).json(image)
                     }
                 })
             }
         })
 
-    }else{
+    } else {
         response.status(401).end()
     }
-    
+
 })
 
 // get all images owned by a user
-app.get("/Users/images/:userID", function(request,response){
+app.get("/Users/images/:userID", function (request, response) {
     const userID = request.params.userID
     const userLoggedIn = isUserVerified(request, userID)
-    if(userLoggedIn){
-        dbConnection.getUsersImages(userID, function(error, data){
-            if(error){
+    if (userLoggedIn) {
+        dbConnection.getUsersImages(userID, function (error, data) {
+            if (error) {
                 response.status(500).end()
-            }else if(data.length > 0) {
+            } else if (data.length > 0) {
                 response.status(200).json(data)
-            }else{
+            } else {
                 response.status(404).end()
             }
         })
-    }else{
+    } else {
         response.status(401).end()
     }
 })
 
 //Delete an image object
-app.delete("/images/:id", function(request,response){
-    dbConnection.getOwnerIdFromImage(request.params.id, function(error, ownerID){
-        if (error){
+app.delete("/images/:id", function (request, response) {
+    dbConnection.getOwnerIdFromImage(request.params.id, function (error, ownerID) {
+        if (error) {
             response.status(400).end()
-        }else{
+        } else {
             const userLoggedIn = isUserVerified(request, ownerID)
-            if(userLoggedIn){
-                dbConnection.deleteImage(request.params.id, function(error, resp){
-                    if(error){
+            if (userLoggedIn) {
+                dbConnection.deleteImage(request.params.id, function (error, resp) {
+                    if (error) {
                         response.status(400).end()
-                    }else{
+                    } else {
                         response.status(200).json("Image deleted")
                     }
                 })
-            }else{
+            } else {
                 response.status(401).end()
             }
         }
@@ -290,46 +286,45 @@ app.delete("/images/:id", function(request,response){
 })
 
 //------------------------- Likes
-//add a like
-//adds even though it already exists
-app.post("/favorites", function(request,response){
-    const newLike = { 
-        imgID:request.body.imgID,
+//add a favorite
+app.post("/favorites", function (request, response) {
+    const newLike = {
+        imgID: request.body.imgID,
         likerID: request.body.userID,
     }
-    
+
     const userLoggedIn = isUserVerified(request, newLike.likerID)
-    if(userLoggedIn){
-        dbConnection.addFavorite(newLike, function(error, like){
-            if(error){
+    if (userLoggedIn) {
+        dbConnection.addFavorite(newLike, function (error, like) {
+            if (error) {
                 response.status(400).json("Variables needed: imgID, userID that exists")
-            }else{
+            } else {
                 response.status(201).json("Favorite added")
             }
         })
-    }else{
+    } else {
         response.status(401).end()
     }
 })
 
-//Gets all likes from a user
-app.get("/favorites/:likerID", function(request,response){
+//Gets all favorites from a user
+app.get("/favorites/:likerID", function (request, response) {
     const likerID = request.params.likerID
-    dbConnection.getFavorites(likerID, function(error, like){
-        if(error){
+    dbConnection.getFavorites(likerID, function (error, like) {
+        if (error) {
             response.status(400).json(error)
-        }else{
+        } else {
             const userLoggedIn = isUserVerified(request, likerID)
-            if(userLoggedIn){
+            if (userLoggedIn) {
                 response.status(200).json(like)
-            }else{
+            } else {
                 response.status(401).end()
             }
         }
     })
 })
 
-//Deletes  all Likes from a user
+//Deletes  all favorites from a user
 app.delete("/favorites/:likerID", function (request, response) {
 
     const likeID = request.params.likerID
@@ -351,38 +346,38 @@ app.delete("/favorites/:likerID", function (request, response) {
 })
 //Upload file
 
-app.post("/upload", upload.single("file"), function(request, response){
+app.post("/upload", upload.single("file"), function (request, response) {
     const userID = request.body.userID
     const imgID = request.body.imgID
     const file = request.file
-    
+
     const userLoggedIn = isUserVerified(request, userID)
-    if(userLoggedIn){
-        if(request.file){
+    if (userLoggedIn) {
+        if (request.file) {
             file.originalname = userID + "_" + file.originalname
             var originalFileName = request.file.originalname
-            dbConnection.connectFileToImage(originalFileName, imgID, function(error, resp){
-                if(error){
+            dbConnection.connectFileToImage(originalFileName, imgID, function (error, resp) {
+                if (error) {
                     response.status(400).json(error)
-                }else{
+                } else {
 
                     var uploadParameters = {
                         Bucket: 'antlud-bucket-1',//specified amazon bucket
                         Key: originalFileName,//name to save file as
                         Body: request.file.buffer//file data to upload
                     };
-                    s3.upload(uploadParameters, function(err) {
-                        if (err){
-                            response.status(400).json(err)          
+                    s3.upload(uploadParameters, function (err) {
+                        if (err) {
+                            response.status(400).json(err)
                         }
-                    })   
-                    response.status(200).json("Picture upload successful with name: " + originalFileName)    
+                    })
+                    response.status(200).json("Picture upload successful with name: " + originalFileName)
                 }
             })
         }
     }
-    else{
-        response.status(401).json({error: 'Unauthorized Access'})
+    else {
+        response.status(401).json({ error: 'Unauthorized Access' })
     }
 })
 
@@ -393,21 +388,21 @@ app.get("/download", (request, response) => {
     const file = request.body.fileName
     const userLoggedIn = isUserVerified(request, userID)
 
-    if(userLoggedIn){
+    if (userLoggedIn) {
         const fileToDownload = file
 
         const downloadParams = {
             Bucket: 'antlud-bucket-1',
             Key: fileToDownload
         }
-    
+
         s3.getObject(downloadParams)
-        .createReadStream()
-        .on('error', function(err){
-            response.status(500).json({error: err})
-        }).pipe(response)
-    }else{
-        response.status(401).json({error: 'Unauthorized Access'})
+            .createReadStream()
+            .on('error', function (err) {
+                response.status(500).json({ error: err })
+            }).pipe(response)
+    } else {
+        response.status(401).json({ error: 'Unauthorized Access' })
     }
 })
 
