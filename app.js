@@ -266,7 +266,7 @@ app.get("/Users/images/:userID", function(request,response){
     }
 })
 
-//Delete an image
+//Delete an image object
 app.delete("/images/:id", function(request,response){
     dbConnection.getOwnerIdFromImage(request.params.id, function(error, ownerID){
         if (error){
@@ -292,7 +292,7 @@ app.delete("/images/:id", function(request,response){
 //------------------------- Likes
 //add a like
 //adds even though it already exists
-app.post("/likes", function(request,response){
+app.post("/favorites", function(request,response){
     const newLike = { 
         imgID:request.body.imgID,
         likerID: request.body.userID,
@@ -300,30 +300,11 @@ app.post("/likes", function(request,response){
     
     const userLoggedIn = isUserVerified(request, newLike.likerID)
     if(userLoggedIn){
-        dbConnection.addLike(newLike, function(error, like){
+        dbConnection.addFavorite(newLike, function(error, like){
             if(error){
-                response.status(400).json("Variables needed: imgID, userID")
+                response.status(400).json("Variables needed: imgID, userID that exists")
             }else{
-                console.log("Like added")
-                dbConnection.connectLikerToImages(like.insertId, newLike.imgID, function(error, change){
-                    if(error){
-                        console.log("Like not connected to an image")
-                        dbConnection.deleteLike(like.insertId, function(error, deleteResp){
-                            if(error) response.status(500).json("New like added, not connected.")
-                        })
-                        response.status(400).json("like not added")
-                    }else{
-                        console.log("Like connected to image")
-                        dbConnection.getLike(like.insertId, function(error, liker){
-                            if(error){
-                                response.status(201).json("Like created and connected.")
-                            }else{
-                                response.status(201).json(liker)
-                            }
-                        })
-                        
-                    }
-                })
+                response.status(201).json("Favorite added")
             }
         })
     }else{
@@ -331,14 +312,13 @@ app.post("/likes", function(request,response){
     }
 })
 
-//Get a liker
-app.get("/likes/:likerID", function(request,response){
+//Gets all likes from a user
+app.get("/favorites/:likerID", function(request,response){
     const likerID = request.params.likerID
-    dbConnection.getLike(likerID, function(error, like){
+    dbConnection.getFavorites(likerID, function(error, like){
         if(error){
             response.status(400).json(error)
         }else{
-            console.log(like[0])
             const userLoggedIn = isUserVerified(request, likerID)
             if(userLoggedIn){
                 response.status(200).json(like)
@@ -349,7 +329,26 @@ app.get("/likes/:likerID", function(request,response){
     })
 })
 
+//Deletes  all Likes from a user
+app.delete("/favorites/:likerID", function (request, response) {
 
+    const likeID = request.params.likerID
+
+    const userLoggedIn = isUserVerified(request, likeID)
+    if (userLoggedIn) {
+
+        dbConnection.removeFavorites(likeID, function (error, resp) {
+            if (error) {
+                response.status(400).end()
+            } else {
+                response.status(200).json("Favorites removed")
+            }
+        })
+
+    } else {
+        response.status(401).end()
+    }
+})
 //Upload file
 
 app.post("/upload", upload.single("file"), function(request, response){
@@ -387,9 +386,32 @@ app.post("/upload", upload.single("file"), function(request, response){
     }
 })
 
+//works but can download other users photos
+app.get("/download", (request, response) => {
+
+    const userID = request.body.userID
+    const file = request.body.fileName
+    const userLoggedIn = isUserVerified(request, userID)
+
+    if(userLoggedIn){
+        const fileToDownload = file
+
+        const downloadParams = {
+            Bucket: 'antlud-bucket-1',
+            Key: fileToDownload
+        }
+    
+        s3.getObject(downloadParams)
+        .createReadStream()
+        .on('error', function(err){
+            response.status(500).json({error: err})
+        }).pipe(response)
+    }else{
+        response.status(401).json({error: 'Unauthorized Access'})
+    }
+})
 
 //Verify token
-//is kind of working i guess
 // Content-Type: application/json
 // Authorization: Bearer the.access.token
 function isUserVerified(req, userID) {

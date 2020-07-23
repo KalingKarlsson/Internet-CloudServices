@@ -38,15 +38,15 @@ function createImageTable(){
 	})
 }
 
-function createLikerTable(){
-	const likerTableQuery = `CREATE TABLE IF NOT EXISTS Liker (
+function createFavoritesTable(){
+	const FavoriteTableQuery = `CREATE TABLE IF NOT EXISTS Favorites (
 		LikerID INT NOT NULL,
 		ImgID INT NOT NULL,
 		FOREIGN KEY (ImgID) REFERENCES Images(ImgID) ON DELETE CASCADE,
 		FOREIGN KEY (LikerID) REFERENCES Users(UserID) ON DELETE CASCADE
 	)`;
 
-	connection.query(likerTableQuery, function(error, result){
+	connection.query(FavoriteTableQuery, function(error, result){
 		if(error){
 			throw error;
 		}
@@ -136,38 +136,38 @@ exports.connectFileToImage = function(fileName, imgID, callback){
 }
 
 //Likes
-exports.addLike = function(newLike, callback ){
-	const query = "INSERT INTO Liker (ImgID, LikerID) VALUES (( SELECT ImgID FROM Images WHERE ImgID = ? ),?)"
+exports.addFavorite = function (newLike, callback) {
 	const values = [newLike.imgID, newLike.likerID]
-	connection.query(query, values, function(error, like){
-		callback(error, like)
+	const query = "INSERT INTO Favorites (ImgID, LikerID) VALUES (( SELECT ImgID FROM Images WHERE ImgID = ? ),?)"
+	connection.query(query, values, function (error, favorite) {
+		callback(error, favorite)
 	})
 }
 
-exports.getLike = function(id, callback ){
-	const query = "SELECT * FROM Liker WHERE LikerID = ?"
-	connection.query(query, id, function(error, like){
-		callback(error, like)
+exports.getFavorites = function(id, callback ){
+	const query = "SELECT * FROM Favorites WHERE LikerID = ?"
+	connection.query(query, id, function(error, favorite){
+		callback(error, favorite)
 	})
 }
 
-exports.deleteLike = function(ID, callback){
-	const query = "DELETE FROM Liker WHERE LikerID = ?"
+exports.removeFavorites = function(ID, callback){
+	const query = "DELETE FROM Favorites WHERE LikerID = ?"
 	connection.query(query, ID, function(error, deletion){
 		callback(error, deletion)
 	})
 }
 
-exports.getOwnerIdFromLike = function(LikeID, callback){
+/*exports.getOwnerIdFromLike = function(LikeID, callback){
 	const query = "SELECT * FROM Liker WHERE LikerID = ?"
 	connection.query(query, LikeID, function(error, like){
-		console.log(like[0].LikerID)
-		callback(error, like[0].LikeID)
+		callback(error, like[0].UserID)
 	})
 }
 
-exports.connectLikerToImages = function(likeID, imgID, callback){
-	const firstQuery = "UPDATE Images SET LikerID = ? WHERE LikerID = ?"
+
+exports.connectFavoriteToImage = function(likeID, imgID, callback){
+	const firstQuery = "UPDATE Images SET LikerID = null WHERE LikerID = ?"
 	connection.query(firstQuery, likeID,function(error, deletion){
 		if(!error){
 			const query = "UPDATE Images SET LikerID = ? WHERE ImgID = ?"
@@ -181,7 +181,7 @@ exports.connectLikerToImages = function(likeID, imgID, callback){
 		}
 	})
 	
-}
+}*/
 
 //Admin api
 exports.changeDB = function(query, callback){
@@ -232,4 +232,4 @@ connection.query(sql, [values], function (err, result) {
 
 createUserTable();
 createImageTable();
-createLikerTable();
+createFavoritesTable();
