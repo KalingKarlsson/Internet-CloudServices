@@ -285,7 +285,7 @@ app.delete("/images/:id", function (request, response) {
 
 })
 
-//------------------------- Likes
+//------------------------- Favorites
 //add a favorite
 app.post("/favorites", function (request, response) {
     const newLike = {
@@ -299,7 +299,7 @@ app.post("/favorites", function (request, response) {
             if (error) {
                 response.status(400).json("Variables needed: imgID, userID that exists")
             } else {
-                response.status(201).json("Favorite added")
+                response.status(201).json("Favorite added, ImgID:" + newLike.imgID + " LikerID:" + newLike.likerID)
             }
         })
     } else {
