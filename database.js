@@ -135,7 +135,7 @@ exports.connectFileToImage = function (fileName, imgID, callback) {
 	})
 }
 
-//Likes
+//Favorites
 exports.addFavorite = function (newLike, callback) {
 	const values = [newLike.imgID, newLike.likerID]
 	const query = "INSERT INTO Favorites (ImgID, LikerID) VALUES (( SELECT ImgID FROM Images WHERE ImgID = ? ),?)"

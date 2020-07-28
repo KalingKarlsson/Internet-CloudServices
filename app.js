@@ -67,7 +67,6 @@ app.post("/login", function (request, response) {
 })
 
 //Create new user
-//skapar man samma igen så returnerar den 400 men vid näsa nya person så har den då skippat ett id nummer
 //body = {" mer mera ,password": "1337lol"}
 app.post("/Users", function (request, response) {
     const newUser = {
@@ -90,36 +89,36 @@ app.post("/Users", function (request, response) {
 })
 
 //get a user
-app.get('/Users/:id', function (req, res) {
-    const userID = req.params.id
-    const userLoggedIn = isUserVerified(req, userID)
+app.get('/Users/:id', function (request, response) {
+    const userID = request.params.id
+    const userLoggedIn = isUserVerified(request, userID)
     if (userLoggedIn) {
-        dbConnection.getUserWithID(req.params.id, function (error, user) {
+        dbConnection.getUserWithID(request.params.id, function (error, user) {
             if (error) {
-                res.status(400).json(error)
+                response.status(400).json(error)
             } else {
-                res.status(200).json(user)
+                response.status(200).json(user)
             }
         })
     } else {
-        res.status(401).end()
+        response.status(401).end()
     }
 })
 
 //delete a user
-app.delete('/Users/:id', function (req, res) {
-    const userID = req.params.id
-    const userLoggedIn = isUserVerified(req, userID)
+app.delete('/Users/:id', function (request, response) {
+    const userID = request.params.id
+    const userLoggedIn = isUserVerified(request, userID)
     if (userLoggedIn) {
-        dbConnection.deleteUser(req.params.id, function (error, user) {
+        dbConnection.deleteUser(request.params.id, function (error, user) {
             if (error) {
-                res.status(400).end()
+                response.status(400).end()
             } else {
-                res.status(200).json("Deleted succesfully ")
+                response.status(200).json("Deleted succesfully ")
             }
         })
     } else {
-        res.status(401).end()
+        response.status(401).end()
     }
 })
 
@@ -137,7 +136,7 @@ app.put("/Users/:id", function (request, response) {
             } else {
                 dbConnection.getUserWithID(alterUserPw.userID, function (error, user) {
                     if (error) {
-                        response.status(200).json("User changed.")
+                        response.status(200).json("Users password changed.")
 
                     } else {
                         response.status(200).json(user);
@@ -285,7 +284,7 @@ app.delete("/images/:id", function (request, response) {
 
 })
 
-//------------------------- Favorites
+//Favorites functions
 //add a favorite
 app.post("/favorites", function (request, response) {
     const newLike = {
@@ -297,7 +296,7 @@ app.post("/favorites", function (request, response) {
     if (userLoggedIn) {
         dbConnection.addFavorite(newLike, function (error, like) {
             if (error) {
-                response.status(400).json("Variables needed: imgID, userID that exists")
+                response.status(400).json("Variables needed: imgID and userID that exists")
             } else {
                 response.status(201).json("Favorite added, ImgID:" + newLike.imgID + " LikerID:" + newLike.likerID)
             }
@@ -344,8 +343,8 @@ app.delete("/favorites/:likerID", function (request, response) {
         response.status(401).end()
     }
 })
-//Upload file
 
+//Upload file
 app.post("/upload", upload.single("file"), function (request, response) {
     const userID = request.body.userID
     const imgID = request.body.imgID
@@ -381,7 +380,7 @@ app.post("/upload", upload.single("file"), function (request, response) {
     }
 })
 
-//works but can download other users photos
+//download file
 app.get("/download", (request, response) => {
 
     const userID = request.body.userID
@@ -406,11 +405,11 @@ app.get("/download", (request, response) => {
     }
 })
 
-//Verify token
+// Verify token
 // Content-Type: application/json
 // Authorization: Bearer the.access.token
-function isUserVerified(req, userID) {
-    const header = req.header("Authorization")
+function isUserVerified(request, userID) {
+    const header = request.header("Authorization")
     const token = header.substr("Bearer ".length)
 
     let data = null
